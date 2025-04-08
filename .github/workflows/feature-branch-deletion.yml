@@ -45,4 +45,4 @@ jobs:
         uses: dawidd6/action-delete-branch@v3
         with:
           branch: ${{ github.event.inputs.feature_branch }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}

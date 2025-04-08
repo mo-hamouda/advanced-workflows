@@ -44,4 +44,4 @@ jobs:
         uses: dawidd6/action-delete-branch@v3
         with:
           branch: ${{ github.event.pull_request.head.ref }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
