@@ -84,7 +84,6 @@ jobs:
           destination_branch: dev
           pr_title: "Merge ${{ github.event.inputs.feature_branch }} into Dev"
           pr_body: "This PR merges changes from ${{ github.event.inputs.feature_branch }} into Dev after successful deployment of test resources."
-          pr_reviewer: "paigen11"
           pr_draft: true
           pr_label: "feature, needs-review, automated pr"
           github_token: ${{ secrets.GH_TOKEN }}
