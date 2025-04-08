@@ -1,0 +1,82 @@
+name: Feature Development and PR Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      feature_branch:
+        description: 'Feature branch to run the workflow on'
+        required: true
+        default: 'feature/*'
+      create_pr:
+        description: 'Create a Pull Request to Dev(Main) after deployment?'
+        type: boolean
+        required: true
+        default: false
+
+jobs:
+  terraform-deploy:
+    name: Terraform Plan and Apply
+    runs-on: ubuntu-latest
+    env:
+      TF_VERSION: 1.9.0
+      GCP_PROJECT_ID: ''
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.feature_branch || github.ref }}
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ env.GCP_PROJECT_ID }}
+          export_default_credentials: true
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: ./terraform
+
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -out=tfplan -input=false
+        working-directory: ./terraform
+        continue-on-error: true
+
+      - name: Check Terraform Plan Success
+        if: steps.plan.outcome != 'success'
+        run: |
+          echo "Terraform Plan failed. Exiting..."
+          exit 1
+
+      - name: Terraform Apply
+        if: steps.plan.outcome == 'success'
+        run: terraform apply -auto-approve -input=false tfplan
+        working-directory: ./terraform
+
+  create-pr:
+    name: Create Pull Request
+    needs: terraform-deploy
+    if: github.event.inputs.create_pr == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.feature_branch }}
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'Merge feature branch into Dev'
+          title: 'Merge ${{ github.event.inputs.feature_branch }} into Dev'
+          body: 'This PR merges changes from ${{ github.event.inputs.feature_branch }} into Dev after successful deployment of test resources.'
+          branch: ${{ github.event.inputs.feature_branch }}
+          base: dev
+          labels: 'feature, needs-review'

@@ -1,0 +1,48 @@
+name: Feature Branch Deletion Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      feature_branch:
+        description: 'Feature branch to delete and clean up'
+        required: true
+        default: 'feature/*'
+
+jobs:
+  cleanup:
+    name: Cleanup Feature Branch
+    runs-on: ubuntu-latest
+    env:
+      TF_VERSION: 1.9.0
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.feature_branch }}
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ env.GCP_PROJECT_ID }}
+          export_default_credentials: true
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: ./terraform
+
+      - name: Terraform Destroy (Test Resource)
+        run: terraform destroy -auto-approve -input=false
+        working-directory: ./terraform
+
+      - name: Delete Feature Branch
+        uses: dawidd6/action-delete-branch@v3
+        with:
+          branch: ${{ github.event.inputs.feature_branch }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
