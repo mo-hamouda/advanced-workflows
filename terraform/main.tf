@@ -22,3 +22,7 @@ resource "google_storage_bucket" "unique_bucket" {
     }
   }
 }
+
+resource "random_id" "bucket_suffix_2" {
+  byte_length = 8
+}
