@@ -27,7 +27,6 @@ resource "random_id" "bucket_suffix_2" {
   byte_length = 8
 }
 
-
 resource "google_storage_bucket" "unique_bucket_2" {
   name          = "${var.bucket_prefix}-${random_id.bucket_suffix_2.hex}"
   location      = var.region
@@ -39,3 +38,4 @@ resource "google_storage_bucket" "unique_bucket_2" {
     enabled = var.enable_versioning
   }
 }
+
