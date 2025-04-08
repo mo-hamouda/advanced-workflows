@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TF_VERSION: 1.9.0
-      GCP_PROJECT_ID: ''rased-415808''
+      GCP_PROJECT_ID: 'rased-415808'
     steps:
       - name: Checkout code for feature branch
         uses: actions/checkout@v4
@@ -19,12 +19,18 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
           
-      - name: Set up Google Cloud SDK
-        uses: google-github-actions/setup-gcloud@v1
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
         with:
-          service_account_key: ${{ secrets.GCP_SA_KEY }}
-          project_id: ${{ env.GCP_PROJECT_ID }}
-          export_default_credentials: true
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          version: latest
+          install_components: 'beta,terraform-tools'
           
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -44,4 +50,4 @@ jobs:
         uses: dawidd6/action-delete-branch@v3
         with:
           branch: ${{ github.event.pull_request.head.ref }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.GH_TOKEN }}
