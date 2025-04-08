@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TF_VERSION: 1.9.0
-      GCP_PROJECT_ID: 'rased-415808'
+      GCP_PROJECT_ID: ''
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -77,13 +77,13 @@ jobs:
           ref: ${{ github.event.inputs.feature_branch }}
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v7
+        id: open-pr
+        uses: repo-sync/pull-request@v2
         with:
-          token: ${{ secrets.GH_TOKEN }}
-          commit-message: 'Merge feature branch into Dev'
-          title: 'Merge ${{ github.event.inputs.feature_branch }} into Dev'
-          body: 'This PR merges changes from ${{ github.event.inputs.feature_branch }} into Dev after successful deployment of test resources.'
-          branch: ${{ github.event.inputs.feature_branch }}
-          base: dev
-          labels: 'feature, needs-review,automated pr'
-          delete-branch: true
+          source_branch: ${{ github.event.inputs.feature_branch }}
+          destination_branch: dev
+          pr_title: "Merge ${{ github.event.inputs.feature_branch }} into Dev"
+          pr_body: "This PR merges changes from ${{ github.event.inputs.feature_branch }} into Dev after successful deployment of test resources."
+          pr_draft: false
+          pr_label: "feature, needs-review, automated pr"
+          github_token: ${{ secrets.GH_TOKEN }}
