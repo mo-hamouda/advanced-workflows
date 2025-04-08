@@ -2,11 +2,6 @@ name: Feature Branch Deletion Workflow
 
 on:
   workflow_dispatch:
-    inputs:
-      feature_branch:
-        description: 'Feature branch to delete and clean up'
-        required: true
-        default: 'feature/*'
 
 jobs:
   cleanup:
@@ -19,7 +14,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.feature_branch }}
+          ref: ${{ github.ref }}
 
       - name: Authenticate to Google Cloud
         id: auth
@@ -50,5 +45,5 @@ jobs:
       - name: Delete Feature Branch
         uses: dawidd6/action-delete-branch@v3
         with:
-          branch: ${{ github.event.inputs.feature_branch }}
+          branches: ${{ github.ref }}
           github_token: ${{ secrets.GH_TOKEN }}
