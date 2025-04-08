@@ -12,6 +12,14 @@ on:
         type: boolean
         required: true
         default: false
+      tf_action:
+        description: 'Terraform action to perform'
+        type: choice
+        required: true
+        default: 'plan'
+        options:
+          - plan
+          - apply
 
 jobs:
   terraform-deploy:
@@ -45,10 +53,12 @@ jobs:
           terraform_version: ${{ env.TF_VERSION }}
 
       - name: Terraform Init
+        if: github.event.inputs.tf_action == 'plan' || github.event.inputs.tf_action == 'apply'
         run: terraform init
         working-directory: ./terraform
 
       - name: Terraform Plan
+        if: github.event.inputs.tf_action == 'plan'
         id: plan
         run: terraform plan -out=tfplan -input=false
         working-directory: ./terraform
@@ -61,7 +71,7 @@ jobs:
           exit 1
 
       - name: Terraform Apply
-        if: steps.plan.outcome == 'success'
+        if: steps.plan.outcome == 'success' && github.event.inputs.tf_action == 'apply'
         run: terraform apply -auto-approve -input=false tfplan
         working-directory: ./terraform
 
