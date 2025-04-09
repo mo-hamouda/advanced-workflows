@@ -49,5 +49,5 @@ jobs:
       - name: Delete Feature Branch
         uses: dawidd6/action-delete-branch@v3
         with:
-          branch: ${{ github.event.pull_request.head.ref }}
+          branches: ${{ github.event.pull_request.head.ref }}
           github_token: ${{ secrets.GH_TOKEN }}
