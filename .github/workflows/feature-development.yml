@@ -287,8 +287,7 @@ jobs:
             --head ${{ github.ref_name }} \
             --title "Merge ${{ github.ref_name }} into ${{ github.event.inputs.target_environment }}" \
             --body "This PR merges changes from ${{ github.ref_name }} into ${{ github.event.inputs.target_environment }} after successful deployment of resources." \
-            --label "feature,needs-review,automated-pr" \
-            --no-draft)
+            --label "feature,needs-review,automated-pr" )
           
           PR_EXIT_CODE=$?
           if [ $PR_EXIT_CODE -ne 0 ]; then
