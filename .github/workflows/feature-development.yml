@@ -260,8 +260,8 @@ jobs:
     needs: terraform-deploy
     if: |
       github.event.inputs.create_pr == 'true' && needs.terraform-deploy.result == 'success'
-
     runs-on: ubuntu-latest
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -270,46 +270,12 @@ jobs:
               
       - name: Create Pull Request
         id: open-pr
-        run: |
-          echo "::group::Creating Pull Request"
-          echo "Creating PR from ${{ github.ref_name }} to ${{ github.event.inputs.target_environment }}"
-          
-          # Authenticate with GitHub token
-          gh auth login --with-token <<< "${{ secrets.GH_TOKEN }}"
-          if [ $? -ne 0 ]; then
-            echo "❌ Failed to authenticate with GitHub token"
-            exit 1
-          fi
-          
-          # Create PR
-          PR_URL=$(gh pr create \
-            --base ${{ github.event.inputs.target_environment }} \
-            --head ${{ github.ref_name }} \
-            --title "Merge ${{ github.ref_name }} into ${{ github.event.inputs.target_environment }}" \
-            --body "This PR merges changes from ${{ github.ref_name }} into ${{ github.event.inputs.target_environment }} after successful deployment of resources." \
-            --label "feature,needs-review,automated-pr" )
-          
-          PR_EXIT_CODE=$?
-          if [ $PR_EXIT_CODE -ne 0 ]; then
-            echo "❌ Failed to create PR with exit code $PR_EXIT_CODE"
-            exit $PR_EXIT_CODE
-          else
-            echo "✅ Successfully created PR: $PR_URL"
-            echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
-          fi
-          echo "::endgroup::"
-        continue-on-error: true
-          
-      - name: Check PR Creation Success
-        if: steps.open-pr.outcome != 'success'
-        run: |
-          echo "❌ Pull Request creation failed. See logs for details."
-          exit 1
-          
-      - name: Summarize PR Creation
-        if: steps.open-pr.outcome == 'success'
-        run: |
-          echo "::group::PR Summary"
-          echo "✅ Successfully created PR from ${{ github.ref_name }} to ${{ github.event.inputs.target_environment }}"
-          echo "PR URL: ${{ steps.open-pr.outputs.pr_url }}"
-          echo "::endgroup::"
+        uses: repo-sync/pull-request@v2
+        with:
+          source_branch: ${{ github.ref_name }}
+          destination_branch: dev
+          pr_title: "Merge ${{ github.ref_name }} into  ${{ github.event.inputs.target_environment }}"
+          pr_body: "This PR merges changes from ${{ github.ref_name }} into ${{ github.event.inputs.target_environment }} after successful deployment of test resources."
+          pr_draft: false
+          pr_label: "feature, needs-review"
+          github_token: ${{ secrets.GH_TOKEN }}
