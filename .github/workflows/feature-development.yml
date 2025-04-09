@@ -259,7 +259,8 @@ jobs:
     name: Create Pull Request
     needs: terraform-deploy
     if: |
-      github.event.inputs.create_pr == 'true' && needs.terraform-deploy.outputs.terraform_success == 'true'
+      github.event.inputs.create_pr == 'true' && needs.terraform-deploy.result == 'success'
+
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
